@@ -1,5 +1,4 @@
 import 'dart:core';
-
 import 'package:flutter/material.dart';
 import 'dummy_data.dart';
 import 'models/meal.dart';
@@ -22,9 +21,13 @@ class MyApp extends StatefulWidget {
 
 class _MyAppState extends State<MyApp> {
   Map<String, bool> _filters = {
-   
+    'gluten': false,
+    'lactose': false,
+    'vegan': false,
+    'vegetarian': false,
   };
   List<Meal> _availableMeals = DUMMY_MEALS;
+  List<Meal> _favoriteMeals = [];
   void _setFilters(Map<String, bool> filterData) {
     setState(() {
       _filters = filterData;
@@ -41,9 +44,27 @@ class _MyAppState extends State<MyApp> {
         if (_filters['vegetarian']! && !meal.isVegetarian) {
           return false;
         }
-      return true;
+        return true;
       }).toList();
     });
+  }
+
+  void _toggleFavorite(String mealId) {
+    final existingIndex =
+        _favoriteMeals.indexWhere((meal) => meal.id == mealId);
+    if (existingIndex >= 0) {
+      setState(() {
+        _favoriteMeals.removeAt(existingIndex);
+      });
+    }else{
+      setState(() {
+        
+        _favoriteMeals.add(DUMMY_MEALS.firstWhere((meal)=>meal.id==mealId),);
+      });
+    }
+  }
+  bool isMealFavorite(String id){
+    return _favoriteMeals.any((meal)=>meal.id==id);
   }
 
   @override
@@ -72,14 +93,15 @@ class _MyAppState extends State<MyApp> {
                   fontWeight: FontWeight.bold),
             ),
       ),
+
       // home: const CategoriesScreen(),
       initialRoute: '/',
       routes: {
-        '/': (ctx) => const TabsScreen(),
+        '/': (ctx) => TabsScreen(_favoriteMeals),
         CategoryMealsScreen.routName: (ctx) =>
             CategoryMealsScreen(_availableMeals),
-        MealDetailScreen.routeName: (ctx) => MealDetailScreen(),
-        FiltersScreen.routName: (ctx) => FiltersScreen(_filters,_setFilters),
+        MealDetailScreen.routeName: (ctx) => MealDetailScreen(_toggleFavorite,isMealFavorite),
+        FiltersScreen.routeName: (ctx) => FiltersScreen(_filters, _setFilters),
       },
       onGenerateRoute: (settings) {
         print(settings.arguments);
